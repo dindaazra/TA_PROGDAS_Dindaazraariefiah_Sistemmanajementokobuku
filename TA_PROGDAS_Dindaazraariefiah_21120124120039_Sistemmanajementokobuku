@@ -1,0 +1,160 @@
+import tkinter as tk
+from tkinter import messagebox
+
+books = []
+customer_queue = []
+
+
+def find_book(title):
+    for book in books:
+        if book.title.lower() == title.lower():
+            return book
+    return None
+
+
+def add_customer_to_queue(customer_name):
+    customer = Customer(customer_name)
+    customer_queue.append(customer)
+
+
+def next_customer():
+    if customer_queue:
+        return customer_queue.pop(0) 
+    return None
+
+
+class Customer:
+    def __init__(self, name):
+        self._name = name
+
+    def get_name(self):
+        return self._name
+
+
+class Book:
+    def __init__(self, title, author, stock):
+        self.title = title
+        self.author = author
+        self.stock = stock
+
+    def sell(self):
+        if self.stock > 0:
+            self.stock -= 1
+            return True
+        else:
+            return False
+
+    def get_info(self):
+        return f"{self.title} by {self.author} - Stock: {self.stock}"
+
+
+class BookStoreApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Sistem Manajemen Toko Buku")
+
+        self.input_frame = tk.Frame(root)
+        self.input_frame.pack(padx=10, pady=10)
+
+        self.title_label = tk.Label(self.input_frame, text="Judul Buku:")
+        self.title_label.grid(row=0, column=0, sticky="w")
+
+        self.title_entry = tk.Entry(self.input_frame)
+        self.title_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        self.author_label = tk.Label(self.input_frame, text="Penulis:")
+        self.author_label.grid(row=1, column=0, sticky="w")
+
+        self.author_entry = tk.Entry(self.input_frame)
+        self.author_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        self.stock_label = tk.Label(self.input_frame, text="Stok:")
+        self.stock_label.grid(row=2, column=0, sticky="w")
+
+        self.stock_entry = tk.Entry(self.input_frame)
+        self.stock_entry.grid(row=2, column=1, padx=5, pady=5)
+
+        self.customer_label = tk.Label(self.input_frame, text="Nama Pelanggan:")
+        self.customer_label.grid(row=3, column=0, sticky="w")
+
+        self.customer_entry = tk.Entry(self.input_frame)
+        self.customer_entry.grid(row=3, column=1, padx=5, pady=5)
+
+
+        self.button_frame = tk.Frame(root)
+        self.button_frame.pack(padx=10, pady=10)
+
+        self.list_button = tk.Button(self.button_frame, text="Daftar Buku", command=self.show_books)
+        self.list_button.grid(row=0, column=1, padx=10, pady=5)
+
+        self.add_button = tk.Button(self.button_frame, text="Tambah Buku", command=self.add_book)
+        self.add_button.grid(row=0, column=0, padx=10, pady=5)
+
+        self.sell_button = tk.Button(self.button_frame, text="Jual Buku", command=self.sell_book)
+        self.sell_button.grid(row=1, column=0, padx=10, pady=5)
+
+        self.queue_button = tk.Button(self.button_frame, text="Tambah ke Antrian", command=self.add_to_queue)
+        self.queue_button.grid(row=1, column=1, padx=10, pady=5)
+
+        self.next_customer_button = tk.Button(self.button_frame, text="Pelanggan Berikutnya", command=self.show_next_customer)
+        self.next_customer_button.grid(row=2, column=0, columnspan=2, pady=10)
+
+        
+        self.customers_label = tk.Label(root, text="Daftar Pelanggan:")
+        self.customers_label.pack(pady=5)
+
+        self.customers_listbox = tk.Listbox(root, width=50, height=5)
+        self.customers_listbox.pack(pady=5)
+
+    def add_book(self):
+        title = self.title_entry.get()
+        author = self.author_entry.get()
+        stock = int(self.stock_entry.get())
+
+        book = Book(title, author, stock)
+        books.append(book)
+        messagebox.showinfo("Informasi", "Buku berhasil ditambahkan.")
+
+    def show_books(self):
+        book_list = "Daftar Buku:\n\n"
+        for book in books:
+            book_list += book.get_info() + "\n"
+        messagebox.showinfo("Daftar Buku", book_list)
+
+    def sell_book(self):
+        title = self.title_entry.get()
+        book = find_book(title)
+        if book and book.sell():
+            messagebox.showinfo("Informasi", "Buku berhasil dijual.")
+        else:
+            messagebox.showwarning("Peringatan", "Buku tidak tersedia atau stok habis.")
+
+    def add_to_queue(self):
+        customer_name = self.customer_entry.get().strip()  
+        if not customer_name: 
+            messagebox.showwarning("Peringatan", "Nama pelanggan tidak boleh kosong.")
+            return  
+
+        add_customer_to_queue(customer_name)  
+        self.update_customer_listbox()  
+        messagebox.showinfo("Antrian", f"Pelanggan {customer_name} ditambahkan ke antrian.")
+
+    def show_next_customer(self):
+        customer = next_customer()  
+        if customer:
+            messagebox.showinfo("Pelanggan Berikutnya", f"Pelanggan yang dilayani: {customer.get_name()}")
+            self.update_customer_listbox()  
+        else:
+            messagebox.showinfo("Pelanggan Berikutnya", "Antrian kosong.")
+
+    def update_customer_listbox(self):
+        self.customers_listbox.delete(0, tk.END)
+
+        for customer in customer_queue:
+            self.customers_listbox.insert(tk.END, customer.get_name())
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = BookStoreApp(root)
+    root.mainloop()
